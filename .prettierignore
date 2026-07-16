@@ -1,0 +1,12 @@
+.next
+.next-*
+node_modules
+artifacts
+coverage
+blob-report
+playwright-report
+test-results
+package-lock.json
+tests/model/results
+tests/model/artifacts
+casedocs

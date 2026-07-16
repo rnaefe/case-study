@@ -1,0 +1,40 @@
+{
+  "name": "lean-scale-support-poc",
+  "private": true,
+  "version": "1.0.0",
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "format": "prettier --write . --ignore-unknown",
+    "format:check": "prettier --check . --ignore-unknown",
+    "lint": "eslint . --max-warnings=0",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run src",
+    "eval": "vitest run tests/integration",
+    "eval:model": "tsx tests/model/runner.ts",
+    "e2e": "playwright test",
+    "verify": "npm run format:check && npm run lint && npm run typecheck && npm test && npm run eval && npm run e2e && npm run build",
+    "security:audit": "npm audit --omit=dev --audit-level=high"
+  },
+  "dependencies": {
+    "next": "^16.2.10",
+    "openai": "^6.47.0",
+    "react": "^19.1.0",
+    "react-dom": "^19.1.0",
+    "zod": "^3.25.0"
+  },
+  "devDependencies": {
+    "@next/env": "^16.2.10",
+    "@playwright/test": "^1.55.0",
+    "@types/node": "^22.15.0",
+    "@types/react": "^19.1.0",
+    "@types/react-dom": "^19.1.0",
+    "eslint": "^9.39.5",
+    "eslint-config-next": "^16.2.10",
+    "prettier": "^3.9.5",
+    "tsx": "^4.20.0",
+    "typescript": "^5.8.0",
+    "vitest": "^3.2.0"
+  }
+}
