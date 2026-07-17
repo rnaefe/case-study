@@ -1,4 +1,5 @@
 import type { KnowledgeDocument, KnowledgeRepository, RequestContext } from "@/core";
+import { isSafeKnowledgeContent } from "@/core/knowledge/safety";
 import type { TenantData } from "../tenants";
 import { assertTenant } from "./tenant-boundary";
 
@@ -50,7 +51,8 @@ export class TenantKnowledgeRepository implements KnowledgeRepository {
         doc.tenantId === context.tenantId &&
         doc.status === "approved" &&
         effective &&
-        notExpired
+        notExpired &&
+        isSafeKnowledgeContent(doc.content)
       );
     });
   }
