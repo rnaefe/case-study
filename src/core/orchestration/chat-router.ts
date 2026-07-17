@@ -3,7 +3,6 @@ import {
   responseLocaleFor,
   selectResponseLocale,
   transitionToIntent,
-  resetVerificationState,
   type WorkflowResult
 } from "../conversation/transitions";
 import { AssistantProviderError } from "../errors";
@@ -189,7 +188,6 @@ export class ChatRouter {
 }
 
 function acknowledge(state: ConversationState): WorkflowResult {
-  resetVerificationState(state);
   return {
     kind: "answered",
     message:
