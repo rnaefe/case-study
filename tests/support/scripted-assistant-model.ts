@@ -2,11 +2,13 @@ import {
   AssistantProviderError,
   type AssistantModel,
   type EscalationSignals,
+  type HumanRequestTarget,
   type Intent,
   type Locale,
   type Readiness,
   type RedactedMessage,
   type ResponseLocale,
+  type SafetyRequestCategory,
   type UnderstandingEntities,
   type UnderstandingResult
 } from "@/core";
@@ -31,7 +33,9 @@ export function understanding({
   readiness = "ready",
   entities = {},
   escalation = {},
-  conversation = {}
+  conversation = {},
+  humanRequestTarget,
+  safetyCategory
 }: {
   intent: Intent;
   intents?: Intent[];
@@ -41,6 +45,8 @@ export function understanding({
   entities?: UnderstandingEntities;
   escalation?: Partial<EscalationSignals>;
   conversation?: Partial<UnderstandingResult["conversation"]>;
+  humanRequestTarget?: HumanRequestTarget;
+  safetyCategory?: SafetyRequestCategory;
 }): UnderstandingResult {
   return {
     intent,
@@ -48,6 +54,8 @@ export function understanding({
     detectedLocale,
     responseLocale,
     readiness,
+    ...(humanRequestTarget ? { humanRequestTarget } : {}),
+    ...(safetyCategory ? { safetyCategory } : {}),
     entities,
     escalation: { ...noEscalation, ...escalation },
     conversation: {

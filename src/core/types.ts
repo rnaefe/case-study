@@ -135,6 +135,22 @@ export interface PendingAction {
 export type Readiness = "ready" | "needs_clarification" | "insufficient_evidence" | "must_escalate";
 
 export type ResponseLocale = "en" | "ar";
+export type HumanRequestTarget =
+  | "person"
+  | "agent"
+  | "representative"
+  | "supervisor"
+  | "manager"
+  | "other_human";
+export type SafetyRequestCategory =
+  | "none"
+  | "authorization_bypass"
+  | "cross_tenant"
+  | "private_data"
+  | "prompt_disclosure"
+  | "credential_extraction"
+  | "raw_tool_output"
+  | "duplicate_action";
 export type ApplicationOutcome =
   | "answered"
   | "clarification_required"
@@ -158,6 +174,7 @@ export interface UnderstandingEntities {
     | "returnability"
     | "shipping"
     | "cod"
+    | "warranty"
     | "discovery"
     | undefined;
   workflowSelection?: "product_information" | "order_tracking" | undefined;
@@ -183,6 +200,8 @@ export interface UnderstandingResult {
   detectedLocale: Locale;
   responseLocale: ResponseLocale;
   readiness: Readiness;
+  humanRequestTarget?: HumanRequestTarget;
+  safetyCategory?: SafetyRequestCategory;
   entities: UnderstandingEntities;
   escalation: EscalationSignals;
   conversation: {
