@@ -47,4 +47,25 @@ describe("handoff routing", () => {
       })
     ).toBe("refund_request");
   });
+
+  it("keeps payment disputes ahead of refund, cancellation, and explicit-human signals", () => {
+    const reason = resolveGlobalInterrupt({
+      explicitHumanRequest: true,
+      authorizationBypassAttempt: false,
+      refundRequest: true,
+      cancellationRequest: true,
+      addressChangeRequest: false,
+      paymentDispute: true,
+      complaintOrAnger: false,
+      criticalSafety: false,
+      unsafeActionRequest: false
+    });
+
+    expect(reason).toBe("payment_dispute");
+    expect(routingFor(reason!)).toEqual({
+      urgency: "high",
+      priority: 1,
+      recommendedTier: "cx_manager"
+    });
+  });
 });

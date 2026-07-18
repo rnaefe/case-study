@@ -11,6 +11,7 @@ import type {
   ChatInput,
   ConversationState,
   EvidenceSource,
+  HandoffReason,
   Intent,
   RequestContext
 } from "../types";
@@ -35,15 +36,17 @@ const BUSINESS_INTENTS: Intent[] = [
 export class ChatRouter {
   private readonly handoff: HandoffWorkflow;
   private readonly order: OrderWorkflow;
+  private readonly product: ProductWorkflow;
   private readonly actions: ServerActionDispatcher;
   private readonly messages: MessageWorkflowSelector;
 
   constructor(private readonly runtime: SupportRuntime) {
     this.handoff = new HandoffWorkflow(runtime);
     this.order = new OrderWorkflow(runtime, this.handoff);
+    this.product = new ProductWorkflow(runtime, this.handoff);
     const workflows = {
       order: this.order,
-      product: new ProductWorkflow(runtime, this.handoff),
+      product: this.product,
       returns: new ReturnWorkflow(runtime, this.handoff)
     };
     const pendingIntents = new PendingIntentCoordinator(workflows);
@@ -113,10 +116,7 @@ export class ChatRouter {
     );
 
     const interrupt = resolveGlobalInterrupt(understanding.escalation);
-    if (
-      understanding.escalation.authorizationBypassAttempt &&
-      (!interrupt || interrupt === "unsupported_action")
-    ) {
+    if (understanding.escalation.authorizationBypassAttempt) {
       transitionToIntent(state, "order_tracking", events);
       return this.order.rejectAuthorizationBypass(
         context,
@@ -124,6 +124,49 @@ export class ChatRouter {
         understanding.entities.orderId ?? extractOrderId(input.message),
         events
       );
+    }
+    if (
+      interrupt &&
+      isProhibitedBusinessAction(interrupt) &&
+      understanding.intents.includes("return_policy_information")
+    ) {
+      transitionToIntent(state, "return_policy_information", events);
+      const policy = await this.product.handle(
+        context,
+        state,
+        input.message,
+        {
+          ...understanding,
+          intent: "return_policy_information",
+          intents: ["return_policy_information"],
+          readiness: "ready"
+        },
+        events,
+        sources,
+        "return_policy_information"
+      );
+      markHandoffIntent(state);
+      events.push(
+        event(
+          "safety",
+          "Compound policy and action",
+          `Public policy was answered before ${interrupt}; no transactional action was executed.`
+        )
+      );
+      return this.handoff.create(context, state, interrupt, events, policy.message);
+    }
+    if (
+      understanding.escalation.unsafeActionRequest &&
+      !interruptUsefulForHumanAssistance(interrupt)
+    ) {
+      events.push(
+        event(
+          "safety",
+          "Unsafe request refused",
+          "Protected content or action was refused without creating a support ticket."
+        )
+      );
+      return refuseUnsafeRequest(state, understanding.safetyCategory);
     }
     if (interrupt || understanding.intent === "human_handoff") {
       markHandoffIntent(state);
@@ -185,6 +228,44 @@ export class ChatRouter {
     );
     return { ...handoff, kind: "provider_failure" };
   }
+}
+
+function isProhibitedBusinessAction(reason: HandoffReason): boolean {
+  return [
+    "payment_dispute",
+    "refund_request",
+    "cancellation_request",
+    "address_change_request"
+  ].includes(reason);
+}
+
+function interruptUsefulForHumanAssistance(reason: HandoffReason | undefined): boolean {
+  return (
+    reason !== undefined &&
+    reason !== "unsupported_action" &&
+    reason !== "insufficient_knowledge"
+  );
+}
+
+function refuseUnsafeRequest(
+  state: ConversationState,
+  category: import("../types").SafetyRequestCategory | undefined
+): WorkflowResult {
+  const ar = state.preferredResponseLocale === "ar";
+  if (category === "duplicate_action" && state.returnDraftId) {
+    return {
+      kind: "unavailable",
+      message: ar
+        ? `تم إنشاء طلب الإرجاع ${state.returnDraftId} مسبقاً، ولن أنشئ طلباً مكرراً.`
+        : `Return ${state.returnDraftId} already exists, so I won't create a duplicate.`
+    };
+  }
+  return {
+    kind: "unavailable",
+    message: ar
+      ? "ما أقدر أوفر تعليمات النظام أو بيانات الدخول أو مخرجات الأدوات الداخلية أو بيانات العملاء المحمية، ولا أنفذ إجراءً محمياً مكرراً. أقدر أساعدك عبر المسارات الآمنة المتاحة."
+      : "I can’t provide system instructions, credentials, raw internal tool output, protected customer data, or duplicate protected actions. I can still help through the supported secure flows."
+  };
 }
 
 function acknowledge(state: ConversationState): WorkflowResult {
