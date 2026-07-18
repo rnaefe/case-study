@@ -2,6 +2,8 @@
 
 Each requested activity considers exactly three alternatives. Selection reflects this POC’s short timebox, TypeScript stack, repository-local workflow, multilingual risk, and requirement for human review.
 
+These choices are not a universal or fully objective ranking of tools. For a hiring-case POC the goal was a fast, reviewable prototype, so familiarity and execution speed were deliberate selection factors alongside cost, synergy, and fit. Another engineer with different constraints could reasonably pick differently; the tables below explain _this_ decision path, not a definitive market verdict.
+
 ## Requirements gathering
 
 | Option  | Decision and trade-off                                                                                     |
@@ -34,21 +36,21 @@ Human boundary: expected business and security outcomes are reviewed; a generate
 
 ## Code-development environment
 
-| Option                      | Decision and trade-off                                                                                            |
-| --------------------------- | ----------------------------------------------------------------------------------------------------------------- |
-| Codex                       | Selected for repository-wide implementation, terminal verification, and long-running task context.                |
-| Cursor                      | Rejected for this workflow; capable inline editing but more manual orchestration across code, docs, and commands. |
-| VS Code with GitHub Copilot | Rejected as primary; excellent local completion, but the task required end-to-end refactor ownership.             |
+| Option                      | Decision and trade-off                                                                                                                    |
+| --------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------- |
+| Codex                       | Selected as the primary environment for repository-wide implementation, terminal verification, and long-running task context.             |
+| Cursor                      | Selected for lighter use: sanity checks, manual review passes, and small targeted edits. Not the main implementation driver for this POC. |
+| VS Code with GitHub Copilot | Rejected as primary; excellent local completion, but the task required end-to-end refactor ownership beyond inline assistance.            |
 
-Human boundary: the candidate owns architecture, reviews diffs, and remains accountable for product claims.
+Human boundary: the candidate owns architecture, reviews diffs, and remains accountable for product claims. Cursor did not replace that ownership; it supported spot checks and narrow fixes.
 
 ## Code review
 
-| Option                | Decision and trade-off                                                                           |
-| --------------------- | ------------------------------------------------------------------------------------------------ |
-| Codex review          | Selected for requirement-aware repository inspection and targeted executable checks.             |
-| CodeRabbit            | Rejected; strongest in hosted PR workflows and can add noise for a local behavioral case.        |
-| GitHub Copilot review | Rejected; convenient but requires more context to focus on tenant, state, and policy invariants. |
+| Option                     | Decision and trade-off                                                                                     |
+| -------------------------- | ---------------------------------------------------------------------------------------------------------- |
+| Codex (in-repo inspection) | Selected for requirement-aware repository inspection and targeted executable checks, without opening a PR. |
+| CodeRabbit                 | Rejected; strongest in hosted PR workflows and can add noise for a local behavioral case.                  |
+| GitHub Copilot code review | Rejected; convenient but requires more context to focus on tenant, state, and policy invariants.           |
 
 Human boundary: privacy, security, Arabic claims, and evidence-to-claim alignment receive manual final review.
 

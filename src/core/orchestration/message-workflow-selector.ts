@@ -24,7 +24,8 @@ import { PendingIntentCoordinator } from "./pending-intent-coordinator";
 import {
   mergeProductClarification,
   needsProductReference,
-  requestProductReference
+  requestProductReference,
+  reuseProductContextForRestock
 } from "./product-routing";
 
 type MessageInput = Extract<ChatInput, { inputType: "message" }>;
@@ -168,7 +169,18 @@ export class MessageWorkflowSelector {
     events: AuditEvent[],
     sources: EvidenceSource[]
   ): Promise<WorkflowResult> {
-    const actionable = understanding.intents.filter(
+    const contextualUnderstanding = reuseProductContextForRestock(state, understanding);
+    if (contextualUnderstanding !== understanding) {
+      events.push(
+        event(
+          "state_transition",
+          "Product context reused",
+          `Restock follow-up resolved to ${state.productContext?.productId}.`
+        )
+      );
+    }
+
+    const actionable = contextualUnderstanding.intents.filter(
       (intent): intent is "product_information" | "order_tracking" =>
         intent === "product_information" || intent === "order_tracking"
     );
@@ -183,42 +195,45 @@ export class MessageWorkflowSelector {
           options: ["product_information", "order_tracking"]
         },
         events,
-        understanding
+        contextualUnderstanding
       );
       events.push(event("intent", "Compound request", "Model detected product and order intents."));
       return this.pendingIntents.askForSelection(state);
     }
 
-    transitionToIntent(state, understanding.intent, events);
-    captureReturnContext(state, understanding);
-    if (needsProductReference(state, understanding)) {
-      return requestProductReference(state, text, understanding, events);
+    transitionToIntent(state, contextualUnderstanding.intent, events);
+    captureReturnContext(state, contextualUnderstanding);
+    if (needsProductReference(state, contextualUnderstanding)) {
+      return requestProductReference(state, text, contextualUnderstanding, events);
     }
     if (state.pendingClarification?.type === "product_reference") {
       clearClarification(state);
     }
 
     if (
-      understanding.intent === "product_information" ||
-      understanding.intent === "return_policy_information"
+      contextualUnderstanding.intent === "product_information" ||
+      contextualUnderstanding.intent === "return_policy_information"
     ) {
       const result = await this.workflows.product.handle(
         context,
         state,
         text,
-        understanding,
+        contextualUnderstanding,
         events,
         sources,
-        understanding.intent
+        contextualUnderstanding.intent
       );
       return state.phase === "resolved" ? offerPendingIntent(state, result) : result;
     }
-    if (understanding.intent === "order_tracking" || understanding.intent === "return_request") {
-      return understanding.entities.orderId
+    if (
+      contextualUnderstanding.intent === "order_tracking" ||
+      contextualUnderstanding.intent === "return_request"
+    ) {
+      return contextualUnderstanding.entities.orderId
         ? this.workflows.order.startOrReuseAccess(
             context,
             state,
-            understanding.entities.orderId,
+            contextualUnderstanding.entities.orderId,
             events
           )
         : askForOrderNumber(state, events);

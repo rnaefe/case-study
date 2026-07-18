@@ -296,26 +296,42 @@ describe("support runtime", () => {
     const restockRuntime = runtimeFor("ksa-fashion", [
       understanding({
         intent: "product_information",
+        entities: { productQuestionType: "discovery" }
+      }),
+      understanding({
+        intent: "product_information",
         entities: {
-          productReference: "linen dress",
+          productReference: "Linen Wrap Dress",
           productQuestionType: "details"
         }
       }),
       understanding({
         intent: "product_information",
+        readiness: "needs_clarification",
         entities: { requestedVariant: "L", productQuestionType: "restock" },
-        conversation: { isFollowUp: true, refersToPreviousProduct: true }
+        conversation: { isFollowUp: false, refersToPreviousProduct: false }
       })
     ]);
-    await restockRuntime.chat(restockContext, {
+    const discovered = await restockRuntime.chat(restockContext, {
       inputType: "message",
-      message: "Tell me about the linen dress"
+      message: "What products do you have?"
     });
+    expect(discovered.state.phase).toBe("awaiting_product_clarification");
+
+    const selected = await restockRuntime.chat(restockContext, {
+      inputType: "message",
+      message: "Linen Wrap Dress"
+    });
+    expect(selected.state.productContext?.productId).toBe("F-DRESS-01");
+
     const restock = await restockRuntime.chat(restockContext, {
       inputType: "message",
-      message: "When will size L be back in stock?"
+      message: "When will be the L size be in stock?"
     });
+    expect(restock.outcome).toBe("unavailable");
     expect(restock.message).toContain("No confirmed restock date is available.");
+    expect(restock.sources.map((source) => source.id)).toEqual(["F-DRESS-01"]);
+    expect(restock.events.some((event) => event.label === "Product context reused")).toBe(true);
     expect(restock.ticket).toBeUndefined();
   });
 

@@ -1,12 +1,12 @@
 # 3–5 Minute Demo Script
 
-Use `/t/ksa-fashion` unless a step says otherwise. Before recording, start a clean conversation and keep the execution trace visible.
+Use `/t/ksa-fashion` unless a step says otherwise. Before recording, start a clean conversation and open the workspace inspector (Tenant / Decisions) when you need to show capabilities or server decisions.
 
 ## 0:00–0:25 — Problem and architecture
 
 “The client handles roughly 1,200 to 1,500 support tickets per day with an 8-to-12-hour response time. Tracking, returns, and product questions represent about 85% of volume. This POC tests a model-first architecture: the model owns multilingual meaning, then deterministic code owns tenant context, authorization, policy, evidence, handoff, and actions.”
 
-Point out the tenant selector, language control, source area, and safe execution trace.
+Open **Tenant details** to show the saved policy, return rules, enabled capabilities, approved knowledge count, and demo order IDs. Point out that the assistant uses this tenant-scoped data rather than a shared global store. Use **Decisions** later to show the operational trace.
 
 ## 0:25–0:55 — Grounded product answer
 
@@ -85,7 +85,7 @@ Close with the explicit limitations:
 ## Recording checklist
 
 - Use a clean conversation for each major flow.
-- Keep tenant, direction, sources, and execution trace in frame.
+- Keep tenant, direction, sources, and the Decisions inspector in frame.
 - Never paste the API key or `.env` content.
 - Use the secure OTP field, not a normal chat message.
 - The OTP step has a "Talk to an agent" escape; non-code text is treated as a normal message, never a failed submission.

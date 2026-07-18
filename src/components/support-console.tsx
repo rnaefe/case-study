@@ -1,23 +1,24 @@
 "use client";
 
-import type { TenantConfig } from "@/core";
 import { useMemo } from "react";
 import { useRouter } from "next/navigation";
+import type { TenantWorkspaceProfile } from "@/server/tenant-workspace";
 import { ConversationPanel } from "./conversation-panel";
-import { ExecutionTrace } from "./execution-trace";
 import { SupportHeader } from "./support-header";
 import { useSupportConversation } from "./use-support-conversation";
+import { WorkspaceInspector } from "./workspace-inspector";
 
 export function SupportConsole({
-  tenant,
+  profile,
   tenants,
   modelConfigured
 }: {
-  tenant: TenantConfig;
-  tenants: TenantConfig[];
+  profile: TenantWorkspaceProfile;
+  tenants: TenantWorkspaceProfile["config"][];
   modelConfigured: boolean;
 }) {
   const router = useRouter();
+  const tenant = profile.config;
   const conversation = useSupportConversation(tenant.id);
   const accentStyle = useMemo(
     () =>
@@ -38,7 +39,7 @@ export function SupportConsole({
       />
       <div className="workspace">
         <ConversationPanel tenant={tenant} conversation={conversation} />
-        <ExecutionTrace tenant={tenant} conversation={conversation} />
+        <WorkspaceInspector profile={profile} conversation={conversation} />
       </div>
     </main>
   );

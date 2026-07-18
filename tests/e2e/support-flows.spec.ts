@@ -70,7 +70,9 @@ test("submits a product question and renders its source", async ({ page }) => {
   await send(page, "Is the linen dress available in medium?");
 
   await expect(page.getByText(/size M is in stock with 4 units/)).toBeVisible();
-  await expect(page.getByText(/Linen Wrap Dress.*catalog/)).toBeVisible();
+  await expect(page.locator(".message.assistant .sources")).toContainText(
+    /Linen Wrap Dress.*catalog/
+  );
 });
 
 test("uses the secure OTP field once and treats thanks as conversation", async ({ page }) => {
@@ -107,7 +109,7 @@ test("uses the secure OTP field once and treats thanks as conversation", async (
   await expect(page.getByLabel("Verification code", { exact: true })).not.toBeVisible();
 });
 
-test("switches tenant and opens the trace on mobile", async ({ page }) => {
+test("switches tenant and opens decisions on mobile", async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await mockChat(page, ({ tenantId }) =>
     tenantId === "ksa-fashion"
@@ -127,12 +129,44 @@ test("switches tenant and opens the trace on mobile", async ({ page }) => {
   await page.getByLabel("Select tenant").selectOption("ksa-electronics");
   await expect(page).toHaveURL(/\/t\/ksa-electronics$/);
   await send(page, "Are the wireless earbuds available?");
-  await expect(page.getByText(/Sahm Wireless Earbuds.*catalog/)).toBeVisible();
-  await expect(page.getByText(/Linen Wrap Dress.*catalog/)).not.toBeVisible();
+  await expect(page.locator(".message.assistant .sources")).toContainText(
+    /Sahm Wireless Earbuds.*catalog/
+  );
+  await expect(page.locator(".message.assistant")).not.toContainText(/Linen Wrap Dress.*catalog/);
 
-  await page.getByRole("button", { name: "View trace" }).click();
-  await expect(page.getByText("Safe execution trace")).toBeInViewport();
+  await page.getByRole("button", { name: "View decisions" }).click();
+  await expect(page.getByText("Workspace inspector")).toBeInViewport();
+  await expect(page.getByRole("tab", { name: "Decisions" })).toHaveAttribute(
+    "aria-selected",
+    "true"
+  );
   await expect(page.getByText("Tenant-scoped catalog search")).toBeVisible();
+});
+
+test("opens detailed tenant policy and order context", async ({ page }) => {
+  await page.goto("/t/ksa-fashion");
+  await page.getByRole("button", { name: "View tenant details" }).click();
+  const inspector = page.getByLabel("Workspace inspector", { exact: true });
+  await expect(inspector.getByText("fashion-standard-v1")).toBeVisible();
+  await expect(inspector.getByText("ORD-1001", { exact: true })).toBeVisible();
+  await expect(inspector.getByText("Linen Wrap Dress", { exact: true })).toBeVisible();
+  await expect(inspector.getByText("14 days", { exact: true })).toBeVisible();
+  const shippingPolicy = inspector.getByText(/Standard KSA delivery takes 2–4 business days/);
+  await expect(shippingPolicy).not.toBeVisible();
+  await inspector.getByText("KSA Fashion shipping guide", { exact: true }).click();
+  await expect(shippingPolicy).toBeVisible();
+  await expect(inspector.getByText("CX Operations", { exact: true }).first()).toBeVisible();
+
+  await page.getByRole("button", { name: "Close workspace inspector" }).click();
+  await page.getByLabel("Select tenant").selectOption("ksa-electronics");
+  await expect(page).toHaveURL(/\/t\/ksa-electronics$/);
+  await page.getByRole("button", { name: "View tenant details" }).click();
+  const electronicsInspector = page.getByLabel("Workspace inspector", { exact: true });
+  await expect(electronicsInspector.getByText("electronics-strict-v1")).toBeVisible();
+  await expect(electronicsInspector.getByText("7 days", { exact: true })).toBeVisible();
+  await expect(
+    electronicsInspector.getByText(/Standard KSA delivery takes 2–4 business days/)
+  ).toHaveCount(0);
 });
 
 test("offers a retry after a failed request", async ({ page }) => {

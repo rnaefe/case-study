@@ -1,16 +1,30 @@
 "use client";
 
 import type {
+  ApplicationOutcome,
   AuditEvent,
   ChatInput,
   ChatResponse,
+  ConversationPhase,
   EvidenceSource,
+  Intent,
   SupportTicket,
   UsageEvent
 } from "@/core";
 import { useRef, useState } from "react";
 
 export type DemoLanguage = "en" | "ar" | "arabizi";
+export type InspectorTab = "tenant" | "decisions";
+
+export type DecisionSnapshot = {
+  outcome: ApplicationOutcome;
+  phase: ConversationPhase;
+  activeIntent?: Intent | undefined;
+  lastIntent?: Intent | undefined;
+  verifiedOrderId?: string | undefined;
+  productId?: string | undefined;
+  sources: EvidenceSource[];
+};
 
 export type UiMessage = {
   id: string;
@@ -52,8 +66,9 @@ export function useSupportConversation(tenantId: string) {
     NonNullable<ChatResponse["suggestedActions"]>
   >([]);
   const [language, setLanguage] = useState<DemoLanguage>("en");
-  const [auditOpen, setAuditOpen] = useState(false);
-  const [workflowPhase, setWorkflowPhase] = useState("idle");
+  const [inspectorOpen, setInspectorOpen] = useState(false);
+  const [inspectorTab, setInspectorTab] = useState<InspectorTab>("tenant");
+  const [decision, setDecision] = useState<DecisionSnapshot>();
   const scrollRef = useRef<HTMLDivElement>(null);
 
   async function sendInput(chatInput: ChatInput, displayValue: string, appendUser = true) {
@@ -96,7 +111,15 @@ export function useSupportConversation(tenantId: string) {
       setEvents((current) => [...data.events, ...current].slice(0, 30));
       setTicket(data.ticket);
       setUsage(data.usage);
-      setWorkflowPhase(data.state.phase);
+      setDecision({
+        outcome: data.outcome,
+        phase: data.state.phase,
+        activeIntent: data.state.activeIntent,
+        lastIntent: data.state.lastResolvedIntent,
+        verifiedOrderId: data.state.authenticatedAccess?.orderId ?? data.state.orderId,
+        productId: data.state.productContext?.productId,
+        sources: data.sources
+      });
       setSuggestedReplies(data.suggestedReplies ?? []);
       setSuggestedActions(data.suggestedActions ?? []);
       setOtpMode(Boolean(data.demoOtpAvailable));
@@ -156,20 +179,36 @@ export function useSupportConversation(tenantId: string) {
     setEvents([]);
     setTicket(undefined);
     setUsage(undefined);
-    setWorkflowPhase("idle");
+    setDecision(undefined);
     setFailedRequest(undefined);
     setOtpMode(false);
     setSuggestedReplies(starterPrompts[language]);
     setSuggestedActions([]);
+    closeInspector();
+  }
+
+  function openInspector(tab: InspectorTab = "decisions") {
+    setInspectorTab(tab);
+    setInspectorOpen(true);
+  }
+
+  function closeInspector() {
+    setInspectorOpen(false);
+    setInspectorTab("tenant");
+  }
+
+  function selectInspectorTab(tab: InspectorTab) {
+    setInspectorTab(tab);
   }
 
   async function selectLanguage(next: DemoLanguage) {
     if (busy) return;
+    const previous = language;
     setLanguage(next);
     if (!messages.length) setSuggestedReplies(starterPrompts[next]);
     setBusy(true);
     try {
-      await fetch("/api/chat", {
+      const response = await fetch("/api/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -181,17 +220,23 @@ export function useSupportConversation(tenantId: string) {
           } satisfies ChatInput
         })
       });
+      if (!response.ok) throw new Error("Language update failed");
+    } catch {
+      setLanguage(previous);
+      if (!messages.length) setSuggestedReplies(starterPrompts[previous]);
     } finally {
       setBusy(false);
     }
   }
 
   return {
-    auditOpen,
     busy,
+    decision,
     events,
     failedRequest,
     input,
+    inspectorOpen,
+    inspectorTab,
     language,
     messages,
     otpMode,
@@ -200,14 +245,15 @@ export function useSupportConversation(tenantId: string) {
     suggestedReplies,
     ticket,
     usage,
-    workflowPhase,
+    closeInspector,
+    openInspector,
     reset,
     requestHumanAgent,
     selectLanguage,
     sendInput,
     sendMessage,
-    setAuditOpen,
-    setInput
+    setInput,
+    selectInspectorTab
   };
 }
 

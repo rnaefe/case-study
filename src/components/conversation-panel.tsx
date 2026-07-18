@@ -24,7 +24,7 @@ export function ConversationPanel({
     selectLanguage,
     sendInput,
     sendMessage,
-    setAuditOpen,
+    openInspector,
     setInput
   } = conversation;
   const isArabic = language === "ar";
@@ -44,11 +44,18 @@ export function ConversationPanel({
         </div>
         <div className="conversation-actions">
           <button
-            className="secondary-button trace-button"
-            aria-label="View trace"
-            onClick={() => setAuditOpen(true)}
+            className="secondary-button"
+            aria-label="View tenant details"
+            onClick={() => openInspector("tenant")}
           >
-            Trace
+            Tenant details
+          </button>
+          <button
+            className="secondary-button trace-button"
+            aria-label="View decisions"
+            onClick={() => openInspector("decisions")}
+          >
+            Decisions
             {events.length ? <span>{events.length}</span> : null}
           </button>
           <button className="secondary-button" onClick={reset}>
@@ -182,7 +189,7 @@ export function ConversationPanel({
 
       <div className="composer-dock">
         <form
-          className={`composer ${otpMode ? "otp" : ""}`}
+          className="composer"
           onSubmit={(event) => {
             event.preventDefault();
             void sendMessage();

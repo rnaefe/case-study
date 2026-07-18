@@ -45,6 +45,31 @@ export function needsProductReference(
   );
 }
 
+export function reuseProductContextForRestock(
+  state: ConversationState,
+  understanding: UnderstandingResult
+): UnderstandingResult {
+  if (
+    understanding.intent !== "product_information" ||
+    understanding.entities.productQuestionType !== "restock" ||
+    understanding.entities.productReference ||
+    understanding.conversation.refersToPreviousProduct ||
+    !state.productContext?.productId
+  ) {
+    return understanding;
+  }
+
+  return {
+    ...understanding,
+    readiness:
+      understanding.readiness === "needs_clarification" ? "ready" : understanding.readiness,
+    conversation: {
+      isFollowUp: true,
+      refersToPreviousProduct: true
+    }
+  };
+}
+
 export function requestProductReference(
   state: ConversationState,
   originalText: string,

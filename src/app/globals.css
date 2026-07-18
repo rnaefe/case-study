@@ -10,8 +10,6 @@
   --surface-subtle: #faf9f6;
   --accent: #6f4cff;
   --accent-soft: #eeeaff;
-  --success: #22865f;
-  --danger: #b64e3e;
   --shadow: 0 24px 70px rgb(33 30 24 / 9%);
 }
 
@@ -722,8 +720,305 @@ button {
   transition-delay: 0s;
 }
 
-.audit-panel .panel-heading {
-  min-height: 76px;
+.inspector-tabs {
+  margin: 0;
+  padding: 10px 14px 0;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px;
+  border-bottom: 1px solid var(--line);
+  background: var(--surface-subtle);
+}
+
+.inspector-tabs button {
+  min-height: 34px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  border: 1px solid transparent;
+  border-bottom: 0;
+  border-radius: 10px 10px 0 0;
+  color: var(--muted);
+  background: transparent;
+  font-size: 10px;
+  font-weight: 650;
+}
+
+.inspector-tabs button.active {
+  color: var(--ink);
+  border-color: var(--line);
+  background: var(--surface);
+}
+
+.inspector-tabs button b {
+  min-width: 16px;
+  height: 16px;
+  display: grid;
+  place-items: center;
+  border-radius: 99px;
+  color: var(--accent);
+  background: var(--accent-soft);
+  font-size: 8px;
+}
+
+.inspector-body {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  display: flex;
+  flex-direction: column;
+}
+
+.inspector-card {
+  margin: 14px 16px 0;
+  padding: 13px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--surface-subtle);
+}
+
+.inspector-card h3 {
+  margin: 0 0 8px;
+  color: var(--quiet);
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.inspector-card-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.inspector-card-head > div {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.inspector-card-head strong {
+  font-size: 12px;
+}
+
+.inspector-card-head span {
+  color: var(--muted);
+  font-size: 9px;
+}
+
+.inspector-facts {
+  margin: 0;
+  display: grid;
+  gap: 8px;
+}
+
+.inspector-facts div {
+  display: grid;
+  grid-template-columns: 92px 1fr;
+  gap: 8px;
+  align-items: start;
+}
+
+.inspector-facts dt {
+  color: var(--quiet);
+  font-size: 9px;
+  font-weight: 650;
+}
+
+.inspector-facts dd {
+  margin: 0;
+  color: var(--ink);
+  font-size: 10px;
+  font-weight: 600;
+  line-height: 1.35;
+}
+
+.capability-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 12px;
+}
+
+.capability-chips span {
+  border: 1px solid var(--line-strong);
+  border-radius: 999px;
+  padding: 4px 8px;
+  color: #555a64;
+  background: var(--surface);
+  font-size: 9px;
+  font-weight: 600;
+}
+
+.policy-conditions {
+  margin: 10px 0 0;
+  padding-left: 16px;
+  color: var(--muted);
+  font-size: 10px;
+  line-height: 1.45;
+}
+
+.inspector-metrics {
+  margin-top: 0;
+}
+
+.inspector-note {
+  margin: 10px 0 0;
+  color: var(--muted);
+  font-size: 10px;
+  line-height: 1.4;
+}
+
+.record-list {
+  display: grid;
+  gap: 8px;
+}
+
+.record-list article {
+  padding: 9px 10px;
+  border: 1px solid var(--line);
+  border-radius: 9px;
+  background: var(--surface);
+}
+
+.record-list article > div {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.record-list strong {
+  color: var(--ink);
+  font-size: 10px;
+}
+
+.record-list span,
+.record-list p {
+  color: var(--muted);
+  font-size: 9px;
+  line-height: 1.4;
+}
+
+.record-list span {
+  text-align: right;
+}
+
+.record-list p {
+  margin: 5px 0 0;
+}
+
+.record-list .knowledge-record {
+  padding: 0;
+  overflow: hidden;
+}
+
+.knowledge-record summary {
+  min-height: 46px;
+  padding: 9px 10px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  list-style: none;
+  cursor: pointer;
+}
+
+.knowledge-record summary::-webkit-details-marker {
+  display: none;
+}
+
+.knowledge-record summary:hover {
+  background: var(--accent-soft);
+}
+
+.knowledge-record summary:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: -2px;
+}
+
+.knowledge-record-heading {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+}
+
+.record-list .knowledge-record-heading > span {
+  text-align: left;
+}
+
+.knowledge-record-toggle {
+  flex: 0 0 auto;
+  width: 20px;
+  height: 20px;
+  display: grid;
+  place-items: center;
+  border-radius: 6px;
+  color: var(--accent);
+  background: var(--accent-soft);
+  font-size: 13px;
+  font-weight: 700;
+  transition: transform 160ms ease;
+}
+
+.knowledge-record details[open] .knowledge-record-toggle {
+  transform: rotate(45deg);
+}
+
+.knowledge-record-detail {
+  padding: 10px;
+  border-top: 1px solid var(--line);
+  background: var(--surface-subtle);
+}
+
+.record-list .knowledge-record-detail > p {
+  margin: 0;
+  color: var(--ink);
+  font-size: 10px;
+  line-height: 1.55;
+  white-space: pre-wrap;
+}
+
+.knowledge-record-detail dl {
+  margin: 10px 0 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 14px;
+}
+
+.knowledge-record-detail dl div {
+  display: flex;
+  gap: 4px;
+}
+
+.knowledge-record-detail dt,
+.knowledge-record-detail dd {
+  margin: 0;
+  color: var(--quiet);
+  font-size: 8px;
+  line-height: 1.4;
+}
+
+.knowledge-record-detail dt {
+  font-weight: 700;
+}
+
+.decision-summary {
+  margin-bottom: 0;
+}
+
+.audit-panel .trace-list {
+  margin-top: 12px;
+}
+
+.audit-panel .metric-card,
+.audit-panel .ticket-card {
+  margin: 12px 16px 0;
 }
 
 .trace-title {
@@ -758,61 +1053,11 @@ button {
   background: var(--accent-soft);
 }
 
-.trace-context {
-  margin: 16px 18px 12px;
-  padding: 13px;
-  display: grid;
-  grid-template-columns: 36px 1fr auto;
-  align-items: center;
-  gap: 10px;
-  border: 1px solid var(--line);
-  border-radius: 12px;
-  background: var(--surface-subtle);
-}
-
 .tenant-logo {
   width: 36px;
   height: 36px;
   border-radius: 10px;
   font-size: 10px;
-}
-
-.trace-context > div {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-}
-
-.trace-context > div strong {
-  font-size: 10px;
-}
-
-.trace-context > div span {
-  color: var(--muted);
-  font-size: 8px;
-}
-
-.trace-context p {
-  margin: 0;
-  display: flex;
-  flex-direction: column;
-  align-items: flex-end;
-  gap: 3px;
-}
-
-.trace-context p span {
-  color: var(--quiet);
-  font-size: 7px;
-  text-transform: uppercase;
-  letter-spacing: 0.07em;
-}
-
-.trace-context p strong {
-  max-width: 120px;
-  color: var(--accent);
-  font-size: 9px;
-  text-transform: capitalize;
-  text-align: right;
 }
 
 .metric-card,

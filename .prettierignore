@@ -7,6 +7,7 @@ blob-report
 playwright-report
 test-results
 package-lock.json
+next-env.d.ts
 tests/model/results
 tests/model/artifacts
 casedocs

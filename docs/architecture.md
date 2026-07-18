@@ -35,7 +35,8 @@ Core code imports no Next.js, React, OpenAI SDK, tenant fixtures, Playwright, or
 - `server/adapters/`: one tenant-scoped in-memory adapter per commerce, shipping, OTP, knowledge, helpdesk, or conversation port.
 - `server/runtime.ts`: the composition root.
 - `components/support-console.tsx`: page composition only.
-- `components/conversation-panel.tsx`, `execution-trace.tsx`, and `support-header.tsx`: reusable presentation boundaries backed by `use-support-conversation.ts`.
+- `components/conversation-panel.tsx` and `support-header.tsx`: reusable chat presentation backed by `use-support-conversation.ts`.
+- `components/workspace-inspector.tsx`: drawer shell; focused tenant and decision panels expose registered tenant data and operational AI/server decisions.
 
 ## Conversation transitions
 

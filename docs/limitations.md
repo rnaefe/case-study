@@ -10,7 +10,7 @@
 - Saudi Arabic and Arabizi behavior has controlled test coverage but still needs native Saudi reviewer sign-off.
 - Controlled scenarios do not measure production reliability, latency distribution, CSAT/NPS recovery, conversion, deflection, or agent productivity.
 - Usage cost shown in the UI is an estimate; production observability should use provider-reported usage.
-- `npm run security:audit` fails on high/critical findings and currently reports two moderate transitive PostCSS advisories. npm’s offered force fix is a breaking Next.js downgrade, so it was not applied.
+- `npm run security:audit` uses `--audit-level=high`, so it currently exits cleanly while still reporting two moderate transitive PostCSS advisories under Next.js. npm’s offered force fix is a breaking Next.js downgrade, so it was not applied.
 
 ## Production next steps
 
