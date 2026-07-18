@@ -58,6 +58,10 @@ describe("support runtime", () => {
 
   it("keeps verified tracking active after thanks without exposing the OTP", async () => {
     const ctx = context("ksa-fashion");
+    const expectedEta = getTenantData("ksa-fashion")!.shipments.find(
+      (shipment) => shipment.shipmentId === "SHP-F-1001"
+    )!.eta;
+    if (!expectedEta) throw new Error("Expected a synthetic tracking ETA");
     const runtime = runtimeFor("ksa-fashion", [
       understanding({
         intent: "order_tracking",
@@ -80,7 +84,7 @@ describe("support runtime", () => {
 
     const tracked = await runtime.chat(ctx, { inputType: "submit_otp", code: "2468" });
     expect(tracked.state.phase).toBe("resolved");
-    expect(tracked.message).toContain("2026-07-19");
+    expect(tracked.message).toContain(expectedEta);
     expect(JSON.stringify(tracked)).not.toContain("2468");
 
     const thanks = await runtime.chat(ctx, {
@@ -95,7 +99,7 @@ describe("support runtime", () => {
       message: "It didn't come?"
     });
     expect(followUp.state.phase).toBe("resolved");
-    expect(followUp.message).toContain("2026-07-19");
+    expect(followUp.message).toContain(expectedEta);
     expect(followUp.events.some((event) => event.label === "Verified access reused")).toBe(true);
     expect(followUp.events.some((event) => event.label === "Verification challenge")).toBe(false);
   });
