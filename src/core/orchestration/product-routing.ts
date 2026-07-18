@@ -35,7 +35,8 @@ export function needsProductReference(
   if (
     understanding.entities.productQuestionType === "discovery" ||
     understanding.entities.productQuestionType === "shipping" ||
-    understanding.entities.productQuestionType === "cod"
+    understanding.entities.productQuestionType === "cod" ||
+    understanding.entities.productQuestionType === "warranty"
   ) {
     return false;
   }

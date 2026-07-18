@@ -11,6 +11,7 @@ import type {
   ConversationState,
   EvidenceSource,
   Intent,
+  Product,
   RequestContext,
   UnderstandingResult
 } from "../types";
@@ -32,6 +33,9 @@ export class ProductWorkflow {
     sources: EvidenceSource[],
     intent: Extract<Intent, "product_information" | "return_policy_information">
   ): Promise<WorkflowResult> {
+    if (isWarrantyQuestion(text)) {
+      return this.answerWarrantyQuestion(context, state, text, events, sources, intent);
+    }
     if (
       intent === "product_information" &&
       understanding.entities.productQuestionType === "discovery"
@@ -46,8 +50,11 @@ export class ProductWorkflow {
       ? preferredProductId
       : (understanding.entities.productReference ?? text);
     const knowledgeCategory = this.knowledgeCategory(understanding, intent);
+    const shouldSearchCatalog = intent === "product_information";
     const [products, docs] = await Promise.all([
-      this.runtime.commerce.searchProducts(context, productQuery),
+      shouldSearchCatalog
+        ? this.runtime.commerce.searchProducts(context, productQuery)
+        : Promise.resolve([]),
       knowledgeCategory
         ? this.runtime.knowledge.findApprovedByCategory(
             context,
@@ -56,7 +63,9 @@ export class ProductWorkflow {
           )
         : Promise.resolve([])
     ]);
-    events.push(event("tool_call", "Catalog search", `${products.length} tenant-scoped result(s)`));
+    if (shouldSearchCatalog) {
+      events.push(event("tool_call", "Catalog search", `${products.length} tenant-scoped result(s)`));
+    }
     events.push(
       event("knowledge", "Approved knowledge search", `${docs.length} effective source(s)`)
     );
@@ -88,6 +97,7 @@ export class ProductWorkflow {
     const ar = state.preferredResponseLocale === "ar";
     const segments: string[] = [];
     let isUnavailable = false;
+    let requiresDeterministicAbstention = false;
     if (product) {
       rememberProduct(
         state,
@@ -141,6 +151,11 @@ export class ProductWorkflow {
           ar ? "لا يوجد موعد مؤكد لإعادة التوفر." : "No confirmed restock date is available."
         );
       }
+      const attributeAbstention = unsupportedAttributeAbstention(text, product, ar);
+      if (attributeAbstention) {
+        segments.push(attributeAbstention);
+        requiresDeterministicAbstention = true;
+      }
     }
 
     if (doc) {
@@ -149,20 +164,24 @@ export class ProductWorkflow {
     }
     resolveIntent(state, intent, events);
     const groundedDraft = segments.join("\n\n");
-    const message = await this.runtime.model.composeResponse({
-      locale: state.preferredResponseLocale ?? "en",
-      intent,
-      userText: redactPii(text),
-      evidence: [...(product ? [JSON.stringify(product)] : []), ...(doc ? [doc.content] : [])],
-      groundedDraft
-    });
-    events.push(
-      event(
-        "tool_call",
-        "Localized response composition",
-        "Model composed from tenant-scoped grounded evidence."
-      )
-    );
+    const message = requiresDeterministicAbstention
+      ? groundedDraft
+      : await this.runtime.model.composeResponse({
+          locale: state.preferredResponseLocale ?? "en",
+          intent,
+          userText: redactPii(text),
+          evidence: [...(product ? [JSON.stringify(product)] : []), ...(doc ? [doc.content] : [])],
+          groundedDraft
+        });
+    if (!requiresDeterministicAbstention) {
+      events.push(
+        event(
+          "tool_call",
+          "Localized response composition",
+          "Model composed from tenant-scoped grounded evidence."
+        )
+      );
+    }
     return {
       kind: isUnavailable ? "unavailable" : "answered",
       message,
@@ -187,6 +206,44 @@ export class ProductWorkflow {
       default:
         return undefined;
     }
+  }
+
+  private async answerWarrantyQuestion(
+    context: RequestContext,
+    state: ConversationState,
+    text: string,
+    events: AuditEvent[],
+    sources: EvidenceSource[],
+    intent: Extract<Intent, "product_information" | "return_policy_information">
+  ): Promise<WorkflowResult> {
+    const documents = (await this.runtime.knowledge.searchApproved(context, text)).filter((doc) =>
+      /\b(?:warranty|guarantee)\b|ضمان/iu.test(`${doc.title}\n${doc.content}`)
+    );
+    events.push(
+      event("knowledge", "Approved warranty search", `${documents.length} effective source(s)`)
+    );
+    resolveIntent(state, intent, events);
+    if (!documents.length) {
+      return {
+        kind: "unavailable",
+        message:
+          state.preferredResponseLocale === "ar"
+            ? "ما عندي معلومات ضمان معتمدة لهذا المتجر، لذلك ما أقدر أؤكد وجود ضمان مدى الحياة."
+            : "I don’t have approved warranty information for this store, so I can’t confirm that its products have a lifetime warranty."
+      };
+    }
+    const document = documents[0]!;
+    sources.push({ id: document.id, label: document.title });
+    return {
+      kind: "answered",
+      message: await this.runtime.model.composeResponse({
+        locale: state.preferredResponseLocale ?? "en",
+        intent,
+        userText: redactPii(text),
+        evidence: [document.content],
+        groundedDraft: document.content
+      })
+    };
   }
 
   private async discover(
@@ -272,4 +329,29 @@ export class ProductWorkflow {
       suggestedReplies: products.map((product) => (ar ? product.nameAr : product.name))
     };
   }
+}
+
+function isWarrantyQuestion(text: string): boolean {
+  return /\b(?:warranty|guarantee)\b|ضمان/iu.test(text);
+}
+
+function unsupportedAttributeAbstention(
+  text: string,
+  product: Product,
+  ar: boolean
+): string | undefined {
+  const catalogText = `${product.description}\n${product.descriptionAr}\n${product.tags.join(" ")}`;
+  const asksWaterproof = /\bwaterproof\b|مقاوم(?:ة)? للماء/iu.test(text);
+  const asksMachineWashable = /\bmachine[- ]washable|machine wash\b|غسالة/iu.test(text);
+  const unknown: string[] = [];
+  if (asksWaterproof && !/\bwaterproof\b|مقاوم(?:ة)? للماء/iu.test(catalogText)) {
+    unknown.push(ar ? "مقاومة الماء" : "whether it is waterproof");
+  }
+  if (asksMachineWashable && !/\bmachine[- ]washable|machine wash\b|غسالة/iu.test(catalogText)) {
+    unknown.push(ar ? "إمكانية الغسل في الغسالة" : "whether it is machine washable");
+  }
+  if (!unknown.length) return undefined;
+  return ar
+    ? `هذه الخصائص غير مذكورة في بيانات الكتالوج المعتمدة: ${unknown.join(" و")}.`
+    : `The approved catalog does not state ${unknown.join(" or ")}.`;
 }
