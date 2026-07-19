@@ -241,9 +241,7 @@ function isProhibitedBusinessAction(reason: HandoffReason): boolean {
 
 function interruptUsefulForHumanAssistance(reason: HandoffReason | undefined): boolean {
   return (
-    reason !== undefined &&
-    reason !== "unsupported_action" &&
-    reason !== "insufficient_knowledge"
+    reason !== undefined && reason !== "unsupported_action" && reason !== "insufficient_knowledge"
   );
 }
 

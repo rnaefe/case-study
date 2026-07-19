@@ -136,12 +136,7 @@ export type Readiness = "ready" | "needs_clarification" | "insufficient_evidence
 
 export type ResponseLocale = "en" | "ar";
 export type HumanRequestTarget =
-  | "person"
-  | "agent"
-  | "representative"
-  | "supervisor"
-  | "manager"
-  | "other_human";
+  "person" | "agent" | "representative" | "supervisor" | "manager" | "other_human";
 export type SafetyRequestCategory =
   | "none"
   | "authorization_bypass"

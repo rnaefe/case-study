@@ -34,7 +34,7 @@ export type UiMessage = {
   sources?: EvidenceSource[];
 };
 
-const starterPrompts: Record<DemoLanguage, string[]> = {
+const fashionStarterPrompts: Record<DemoLanguage, string[]> = {
   en: [
     "Is the linen dress available in medium?",
     "Track order ORD-1001",
@@ -48,7 +48,26 @@ const starterPrompts: Record<DemoLanguage, string[]> = {
   ]
 };
 
+const electronicsStarterPrompts: Record<DemoLanguage, string[]> = {
+  en: [
+    "Are the wireless earbuds available in black?",
+    "Track order ORD-1001",
+    "I want to return order ORD-1001"
+  ],
+  ar: ["هل السماعات اللاسلكية متوفرة بالأسود؟", "وين طلبي ORD-1001؟", "أبغى أرجع طلب ORD-1001"],
+  arabizi: [
+    "wein talabi ORD-1001?",
+    "abi arja3 order ORD-1001",
+    "hal wireless earbuds black available?"
+  ]
+};
+
+function starterPromptsFor(tenantId: string): Record<DemoLanguage, string[]> {
+  return tenantId === "ksa-electronics" ? electronicsStarterPrompts : fashionStarterPrompts;
+}
+
 export function useSupportConversation(tenantId: string) {
+  const starters = starterPromptsFor(tenantId);
   const [conversationId, setConversationId] = useState(() => crypto.randomUUID());
   const [messages, setMessages] = useState<UiMessage[]>([]);
   const [events, setEvents] = useState<AuditEvent[]>([]);
@@ -61,7 +80,9 @@ export function useSupportConversation(tenantId: string) {
     displayValue: string;
   }>();
   const [otpMode, setOtpMode] = useState(false);
-  const [suggestedReplies, setSuggestedReplies] = useState<string[]>(starterPrompts.en);
+  const [suggestedReplies, setSuggestedReplies] = useState<string[]>(
+    () => starterPromptsFor(tenantId).en
+  );
   const [suggestedActions, setSuggestedActions] = useState<
     NonNullable<ChatResponse["suggestedActions"]>
   >([]);
@@ -182,7 +203,7 @@ export function useSupportConversation(tenantId: string) {
     setDecision(undefined);
     setFailedRequest(undefined);
     setOtpMode(false);
-    setSuggestedReplies(starterPrompts[language]);
+    setSuggestedReplies(starters[language]);
     setSuggestedActions([]);
     closeInspector();
   }
@@ -205,7 +226,7 @@ export function useSupportConversation(tenantId: string) {
     if (busy) return;
     const previous = language;
     setLanguage(next);
-    if (!messages.length) setSuggestedReplies(starterPrompts[next]);
+    if (!messages.length) setSuggestedReplies(starters[next]);
     setBusy(true);
     try {
       const response = await fetch("/api/chat", {
@@ -223,7 +244,7 @@ export function useSupportConversation(tenantId: string) {
       if (!response.ok) throw new Error("Language update failed");
     } catch {
       setLanguage(previous);
-      if (!messages.length) setSuggestedReplies(starterPrompts[previous]);
+      if (!messages.length) setSuggestedReplies(starters[previous]);
     } finally {
       setBusy(false);
     }

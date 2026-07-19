@@ -1,7 +1,6 @@
 # Evaluation Report
 
 Last verified: 2026-07-19.
-Verified commit: `fc5ffd555f6b1f386d01f541a5c209ceabe333b2`
 
 ## Test strategy
 
@@ -19,7 +18,7 @@ The local suite has no regex-based test NLU, duplicate JSON scenario runner, gen
 - Unit and boundary tests: 20/20.
 - Critical workflow and route-smoke tests: 20/20.
 - Browser UI tests: 5/5 PASS.
-- Formatting, lint, typecheck, production build, browser E2E, and the configured high/critical dependency audit passed on the verified commit.
+- Formatting, lint, typecheck, production build, browser E2E, and the configured high/critical dependency audit passed.
 
 These are controlled synthetic checks, not production reliability or deflection measurements.
 

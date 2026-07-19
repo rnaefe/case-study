@@ -64,7 +64,9 @@ export class ProductWorkflow {
         : Promise.resolve([])
     ]);
     if (shouldSearchCatalog) {
-      events.push(event("tool_call", "Catalog search", `${products.length} tenant-scoped result(s)`));
+      events.push(
+        event("tool_call", "Catalog search", `${products.length} tenant-scoped result(s)`)
+      );
     }
     events.push(
       event("knowledge", "Approved knowledge search", `${docs.length} effective source(s)`)

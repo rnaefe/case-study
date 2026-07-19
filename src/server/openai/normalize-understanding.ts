@@ -71,7 +71,10 @@ function cleanEntities(parsed: ParsedUnderstanding, text: string): Understanding
   };
 }
 
-function reinforceSignals(parsed: ParsedUnderstanding, text: string): {
+function reinforceSignals(
+  parsed: ParsedUnderstanding,
+  text: string
+): {
   escalation: EscalationSignals;
   hasEscalation: boolean;
   hasBusinessInterrupt: boolean;

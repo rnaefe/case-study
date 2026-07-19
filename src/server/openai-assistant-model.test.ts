@@ -5,10 +5,7 @@ import { OpenAIAssistantModel } from "./openai-assistant-model";
 function parsedUnderstanding(
   overrides: {
     intent?:
-      | "product_information"
-      | "human_handoff"
-      | "unsupported"
-      | "conversation_acknowledgement";
+      "product_information" | "human_handoff" | "unsupported" | "conversation_acknowledgement";
     readiness?: "ready" | "needs_clarification" | "must_escalate";
     productQuestionType?: "availability" | "discovery" | "price" | "shipping" | "warranty";
     productReference?: string | null;

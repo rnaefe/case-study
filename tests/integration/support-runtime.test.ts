@@ -564,7 +564,9 @@ describe("support runtime", () => {
     expect(response.message).toContain("14 days");
     expect(response.sources.map((source) => source.id)).toEqual(["KF-RET-EN"]);
     expect(response.ticket?.payload.reason).toBe("refund_request");
-    expect(response.events.some((entry) => entry.label === "Compound policy and action")).toBe(true);
+    expect(response.events.some((entry) => entry.label === "Compound policy and action")).toBe(
+      true
+    );
     expect(response.events.some((entry) => entry.label === "Return draft created")).toBe(false);
   });
 
