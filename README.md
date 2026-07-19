@@ -16,8 +16,10 @@ Create `.env.local` with environment variable names from `.env.example`:
 
 ```env
 OPENAI_API_KEY=
-OPENAI_MODEL=
+OPENAI_MODEL=gpt-4o-mini
 ```
+
+`OPENAI_MODEL` is optional and defaults to `gpt-4o-mini`. The runtime uses an OpenAI model via the structured Responses API; without `OPENAI_API_KEY`, chat requests return a controlled 503.
 
 Then run:
 
@@ -69,7 +71,7 @@ npm run eval:model
 npm run eval:model -- --tag security
 npm run eval:model -- --tag Arabic
 npm run eval:model -- --tag Arabizi
-npm run eval:model -- --tag holdout
+npm run eval:model -- --tag regression
 ```
 
 ## Architecture map
@@ -86,21 +88,20 @@ src/app + src/components
 tests/
   integration/  deterministic workflows plus real API-route smoke coverage
   e2e/          critical running-UI paths
-  model/        one tagged live OpenAI understanding + workflow suite
+  model/        tagged live OpenAI understanding + grounded composition suite
 ```
 
-`src/core` imports no Next.js, React, OpenAI SDK, tenant fixtures, or concrete adapters. Every message goes to the semantic model before business workflow selection; deterministic code then enforces security, authorization, policy, and actions. Client action requests are accepted only when the server's current conversation state permits them, and return confirmation additionally requires the current capability token. Conversation writes are centralized in `src/core/conversation/transitions.ts`; the main orchestrator only coordinates load, route, audit, persistence, and response construction.
+`src/core` imports no Next.js, React, OpenAI SDK, tenant fixtures, or concrete adapters. Every message goes to the semantic model before business workflow selection; deterministic code then enforces security, authorization, policy, evidence selection, and actions. Understanding is split into schema, prompt, and normalization so coherence checks can coerce false human signals, reinforce bypass/dispute/safety categories, and preserve compound policy+action intents. Client action requests are accepted only when the server's current conversation state permits them, and return confirmation additionally requires the current capability token. Conversation writes are centralized in `src/core/conversation/transitions.ts`; the main orchestrator only coordinates load, route, audit, persistence, and response construction.
 
 See [architecture](docs/architecture.md) for ownership and trust boundaries.
 
-## Submission documents
+## Repository documentation
 
-- [Problem definition](deliverables/problem-definition.md)
-- [Solution design](deliverables/solution-design.md)
-- [Demo script](deliverables/demo-script.md)
-- [AI tooling decisions](docs/ai-tooling-decisions.md)
+- [Architecture](docs/architecture.md)
 - [Evaluation report](docs/evaluation-report.md)
 - [Limitations](docs/limitations.md)
+
+Product deliverables (problem definition, solution design, demo script, and AI tooling decisions) are submitted separately and are not tracked in this repository.
 
 ## Limitations
 
