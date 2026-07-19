@@ -1,4 +1,4 @@
-# Lean Scale Arabic-First Support POC
+# Arabic-First Support POC
 
 This hiring-case POC proves that a single Next.js application can combine natural English, Arabic, Saudi/Gulf Arabic, Arabizi, and mixed-language support with deterministic tenant, authorization, policy, and transaction controls.
 
